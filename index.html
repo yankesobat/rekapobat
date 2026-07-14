@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rekap Obat Keluarga</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-icon">💊</span>
+        <span class="brand-name">Rekap Obat</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-sync" id="btn-sync" onclick="syncSheets()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+          Sync Sheets
+        </button>
+        <button class="btn-primary" onclick="bukaModal()">+ Tambah Obat</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Stats -->
+    <section class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="s-total">0</div>
+        <div class="stat-lbl">Total obat</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-num" id="s-exp">0</div>
+        <div class="stat-lbl">Kedaluwarsa</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-num" id="s-warn">0</div>
+        <div class="stat-lbl">Hampir habis (&lt;3 bln)</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-num" id="s-ok">0</div>
+        <div class="stat-lbl">Masih aman</div>
+      </div>
+    </section>
+
+    <!-- Filter & Search -->
+    <section class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="cari" class="search-input" placeholder="Cari nama obat, kategori, lokasi..." oninput="render()">
+      </div>
+      <div class="filter-pills">
+        <button class="pill active" data-filter="" onclick="setFilter(this, '')">Semua</button>
+        <button class="pill" data-filter="expired" onclick="setFilter(this, 'expired')">Kedaluwarsa</button>
+        <button class="pill" data-filter="warn" onclick="setFilter(this, 'warn')">Hampir habis</button>
+        <button class="pill" data-filter="ok" onclick="setFilter(this, 'ok')">Aman</button>
+      </div>
+    </section>
+
+    <!-- Daftar Obat -->
+    <section class="list-section">
+      <div id="obat-list" class="obat-grid"></div>
+      <div id="empty-state" class="empty-state" style="display:none">
+        <div class="empty-icon">🔍</div>
+        <p>Tidak ada obat ditemukan</p>
+        <span>Coba ubah kata kunci atau filter</span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Tambah/Edit -->
+  <div id="modal-bg" class="modal-bg" onclick="tutupModal(event)" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Tambah Obat</h2>
+        <button class="modal-close" onclick="tutupModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="f-id">
+        <div class="form-row two">
+          <div class="field">
+            <label>Nama Obat <span class="required">*</span></label>
+            <input id="f-nama" type="text" placeholder="cth: Paracetamol 500mg">
+          </div>
+          <div class="field">
+            <label>Kategori</label>
+            <select id="f-kat">
+              <option value="Umum">Umum</option>
+              <option value="Antibiotik">Antibiotik</option>
+              <option value="Vitamin">Vitamin</option>
+              <option value="Obat Luar">Obat Luar</option>
+              <option value="Sirup">Sirup</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row three">
+          <div class="field">
+            <label>Kedaluwarsa <span class="required">*</span></label>
+            <input id="f-exp" type="month">
+          </div>
+          <div class="field">
+            <label>Jumlah / Sisa</label>
+            <input id="f-qty" type="text" placeholder="cth: 10 tablet">
+          </div>
+          <div class="field">
+            <label>Lokasi Simpan</label>
+            <input id="f-lok" type="text" placeholder="cth: Kotak merah">
+          </div>
+        </div>
+        <div class="field">
+          <label>Catatan / Dosis</label>
+          <textarea id="f-note" rows="2" placeholder="cth: Untuk demam, minum 3x1 setelah makan"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="tutupModal()">Batal</button>
+        <button class="btn-primary" onclick="simpanObat()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Config Panel (untuk Sheets API) -->
+  <div id="config-panel" class="config-panel" style="display:none">
+    <div class="config-inner">
+      <h3>Pengaturan Google Sheets</h3>
+      <p class="config-hint">Isi ID spreadsheet dan API key kamu. Lihat file <code>PANDUAN.md</code> untuk cara mendapatkannya.</p>
+      <div class="field">
+        <label>Spreadsheet ID</label>
+        <input id="cfg-sheet-id" type="text" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+      </div>
+      <div class="field">
+        <label>Google API Key</label>
+        <input id="cfg-api-key" type="text" placeholder="AIzaSy...">
+      </div>
+      <div class="config-actions">
+        <button class="btn-ghost" onclick="document.getElementById('config-panel').style.display='none'">Tutup</button>
+        <button class="btn-primary" onclick="simpanConfig()">Simpan Pengaturan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tombol config kecil di pojok -->
+  <button class="fab-config" title="Pengaturan Sheets" onclick="bukaConfig()">⚙️</button>
+
+  <script src="app.js"></script>
+</body>
+</html>
