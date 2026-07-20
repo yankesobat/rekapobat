@@ -10,7 +10,7 @@ let CONFIG = {
   sheetId:  '1TrBi0XYgAOEAQNG-8wZnxSXNz4sixQ-6Mkc3zHQ0uAM',
   apiKey:   'AIzaSyCqVOTPqSNlCL1rsTzZQir3AOJWIqara1U',
   sheetName: 'Obat',   // nama tab di Google Sheets
-  scriptUrl: 'PASTE_APPS_SCRIPT_URL_DISINI' // ganti setelah deploy Apps Script (lihat PANDUAN.md)
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbwFzqw2RyXU_7e3ZXPLPAyRg-gEhwS_MsKKWpAuAvJOWfgKIP1_60cG0VxHigAGlRIx/exec'
 };
 
 // ─── State ──────────────────────────────────────────────
