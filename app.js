@@ -9,7 +9,8 @@
 let CONFIG = {
   sheetId:  '1TrBi0XYgAOEAQNG-8wZnxSXNz4sixQ-6Mkc3zHQ0uAM',
   apiKey:   'AIzaSyCqVOTPqSNlCL1rsTzZQir3AOJWIqara1U',
-  sheetName: 'Obat'   // nama tab di Google Sheets
+  sheetName: 'Obat',   // nama tab di Google Sheets
+  scriptUrl: 'PASTE_APPS_SCRIPT_URL_DISINI' // ganti setelah deploy Apps Script (lihat PANDUAN.md)
 };
 
 // ─── State ──────────────────────────────────────────────
@@ -172,8 +173,8 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.getElementById('modal-bg').style.display = 'none';
 });
 
-// ─── CRUD ───────────────────────────────────────────────
-function simpanObat() {
+// ─── CRUD (tulis ke Google Sheets lewat Apps Script, lalu sync) ──
+async function simpanObat() {
   const nama = document.getElementById('f-nama').value.trim();
   const exp  = document.getElementById('f-exp').value;
   if (!nama) { toast('Nama obat wajib diisi', 'error'); return; }
@@ -190,17 +191,41 @@ function simpanObat() {
     note: document.getElementById('f-note').value.trim()
   };
 
-  if (id) {
-    const idx = data.findIndex(d => d.id === id);
-    if (idx >= 0) data[idx] = obat;
-  } else {
-    data.push(obat);
+  if (!CONFIG.scriptUrl || CONFIG.scriptUrl.includes('PASTE_')) {
+    toast('Apps Script belum disetel, data hanya tersimpan lokal', 'error');
+    if (id) {
+      const idx = data.findIndex(d => d.id === id);
+      if (idx >= 0) data[idx] = obat;
+    } else {
+      data.push(obat);
+    }
+    saveLocal();
+    render();
+    document.getElementById('modal-bg').style.display = 'none';
+    return;
   }
 
-  saveLocal();
-  render();
-  document.getElementById('modal-bg').style.display = 'none';
-  toast(id ? 'Obat diperbarui ✓' : 'Obat ditambahkan ✓', 'success');
+  const btnSave = document.querySelector('#modal-bg .btn-primary');
+  if (btnSave) btnSave.disabled = true;
+  toast('Menyimpan ke Sheets...', '');
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: id ? 'update' : 'add', data: obat })
+    });
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+
+    document.getElementById('modal-bg').style.display = 'none';
+    toast(id ? 'Obat diperbarui ✓' : 'Obat ditambahkan ✓', 'success');
+    await syncSheets(); // ambil ulang data terbaru dari Sheets untuk semua orang
+  } catch (err) {
+    console.error(err);
+    toast('Gagal simpan ke Sheets: ' + err.message, 'error');
+  } finally {
+    if (btnSave) btnSave.disabled = false;
+  }
 }
 
 function editObat(id) {
@@ -208,12 +233,32 @@ function editObat(id) {
   if (obat) bukaModal(obat);
 }
 
-function hapusObat(id) {
+async function hapusObat(id) {
   if (!confirm('Hapus obat ini?')) return;
-  data = data.filter(d => d.id !== id);
-  saveLocal();
-  render();
-  toast('Obat dihapus');
+
+  if (!CONFIG.scriptUrl || CONFIG.scriptUrl.includes('PASTE_')) {
+    data = data.filter(d => d.id !== id);
+    saveLocal();
+    render();
+    toast('Obat dihapus (lokal saja)');
+    return;
+  }
+
+  toast('Menghapus di Sheets...', '');
+  try {
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'delete', id })
+    });
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+
+    toast('Obat dihapus ✓', 'success');
+    await syncSheets();
+  } catch (err) {
+    console.error(err);
+    toast('Gagal hapus di Sheets: ' + err.message, 'error');
+  }
 }
 
 // ─── Google Sheets Sync ─────────────────────────────────
