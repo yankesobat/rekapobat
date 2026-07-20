@@ -17,10 +17,6 @@
         <span class="brand-name">Rekap Obat</span>
       </div>
       <div class="topbar-actions">
-        <button class="btn-sync" id="btn-sync" onclick="syncSheets()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
-          Sync Sheets
-        </button>
         <button class="btn-primary" onclick="bukaModal()">+ Tambah Obat</button>
       </div>
     </div>
@@ -129,30 +125,6 @@
   <!-- Toast -->
   <div id="toast" class="toast"></div>
 
-  <!-- Config Panel (untuk Sheets API) -->
-  <div id="config-panel" class="config-panel" style="display:none">
-    <div class="config-inner">
-      <h3>Pengaturan Google Sheets</h3>
-      <p class="config-hint">Isi ID spreadsheet dan API key kamu. Lihat file <code>PANDUAN.md</code> untuk cara mendapatkannya.</p>
-      <div class="field">
-        <label>Spreadsheet ID</label>
-        <input id="cfg-sheet-id" type="text" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
-      </div>
-      <div class="field">
-        <label>Google API Key</label>
-        <input id="cfg-api-key" type="text" placeholder="AIzaSy...">
-      </div>
-      <div class="config-actions">
-        <button class="btn-ghost" onclick="document.getElementById('config-panel').style.display='none'">Tutup</button>
-        <button class="btn-primary" onclick="simpanConfig()">Simpan Pengaturan</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tombol config kecil di pojok -->
-  <button class="fab-config" title="Pengaturan Sheets" onclick="bukaConfig()">⚙️</button>
-
   <script src="app.js"></script>
 </body>
 </html>
-
