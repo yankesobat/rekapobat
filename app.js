@@ -274,14 +274,9 @@ async function hapusObat(id) {
 
 async function syncSheets() {
   if (!CONFIG.sheetId || !CONFIG.apiKey) {
-    bukaConfig();
-    toast('Isi dulu pengaturan Sheets ⚙️', 'error');
+    toast('Konfigurasi Sheets belum lengkap', 'error');
     return;
   }
-
-  const btn = document.getElementById('btn-sync');
-  btn.classList.add('syncing');
-  btn.disabled = true;
 
   try {
     const range  = encodeURIComponent(`${CONFIG.sheetName}!A2:H`);
@@ -292,12 +287,15 @@ async function syncSheets() {
     const rows   = json.values || [];
 
     if (rows.length === 0) {
+      data = [];
+      saveLocal();
+      render();
       toast('Sheet kosong atau belum ada data', '');
       return;
     }
 
-    // Merge: data dari Sheets menimpa data lokal berdasarkan ID
-    const fromSheets = rows.map(r => ({
+    // Sheets adalah satu-satunya sumber data (tidak digabung dengan data lokal lama)
+    data = rows.map(r => ({
       id:   parseInt(r[0]) || Date.now(),
       nama: r[1] || '',
       kat:  r[2] || 'Umum',
@@ -307,41 +305,15 @@ async function syncSheets() {
       note: r[6] || ''
     })).filter(d => d.nama && d.exp);
 
-    // Gabung: prioritaskan data dari Sheets untuk ID yang sama
-    const sheetIds = new Set(fromSheets.map(d => d.id));
-    const localOnly = data.filter(d => !sheetIds.has(d.id));
-    data = [...fromSheets, ...localOnly];
-
     saveLocal();
     render();
-    toast(`${fromSheets.length} data berhasil disinkron ✓`, 'success');
 
   } catch (err) {
     console.error(err);
-    toast('Gagal sync: ' + err.message, 'error');
-  } finally {
-    btn.classList.remove('syncing');
-    btn.disabled = false;
+    toast('Gagal memuat data: ' + err.message, 'error');
   }
-}
-
-// ─── Config Panel ───────────────────────────────────────
-function bukaConfig() {
-  document.getElementById('cfg-sheet-id').value = CONFIG.sheetId;
-  document.getElementById('cfg-api-key').value  = CONFIG.apiKey;
-  const p = document.getElementById('config-panel');
-  p.style.display = p.style.display === 'none' ? 'block' : 'none';
-}
-
-function simpanConfig() {
-  CONFIG.sheetId = document.getElementById('cfg-sheet-id').value.trim();
-  CONFIG.apiKey  = document.getElementById('cfg-api-key').value.trim();
-  localStorage.setItem('cfg_sheet_id', CONFIG.sheetId);
-  localStorage.setItem('cfg_api_key',  CONFIG.apiKey);
-  document.getElementById('config-panel').style.display = 'none';
-  toast('Pengaturan disimpan ✓', 'success');
 }
 
 // ─── Init ───────────────────────────────────────────────
 render();
-syncSheets(); // otomatis sync begitu halaman dibuka, semua orang lihat data sama
+syncSheets(); // otomatis muat data begitu halaman dibuka, semua orang lihat data sama
