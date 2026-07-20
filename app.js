@@ -3,10 +3,12 @@
    Data lokal di localStorage, sync ke Google Sheets
    ═══════════════════════════════════════════════════════ */
 
-// ─── Config (diisi pengguna lewat panel settings) ───────
+// ─── Config (sudah ditanam langsung, sama untuk SEMUA orang) ───
+// Semua yang buka website ini otomatis pakai Spreadsheet yang sama,
+// tidak perlu isi Spreadsheet ID / API Key masing-masing lagi.
 let CONFIG = {
-  sheetId:  localStorage.getItem('cfg_sheet_id')  || '',
-  apiKey:   localStorage.getItem('cfg_api_key')   || '',
+  sheetId:  '1TrBi0XYgAOEAQNG-8wZnxSXNz4sixQ-6Mkc3zHQ0uAM',
+  apiKey:   'AIzaSyCqVOTPqSNlCL1rsTzZQir3AOJWIqara1U',
   sheetName: 'Obat'   // nama tab di Google Sheets
 };
 
@@ -297,3 +299,4 @@ function simpanConfig() {
 
 // ─── Init ───────────────────────────────────────────────
 render();
+syncSheets(); // otomatis sync begitu halaman dibuka, semua orang lihat data sama
